@@ -23,5 +23,8 @@ setup(
     },
     entry_points={
         "console_scripts": ["drive_arch = ros_behaviors_fsm.drive_arch:main"],
+        "console_scripts": [
+            "bump_detector = ros_behaviors_fsm.bump_detector:main",
+        ],
     },
 )
