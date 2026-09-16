@@ -6,20 +6,14 @@ from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 from neato2_interfaces.msg import Bump
 from math import pi
+from threading import Thread, Event
+from time import sleep
+from rclpy.duration import Duration
 
 
 class BumpDetectNode(Node):
     def __init__(self):
         super().__init__("bump_detect_node")
-
-        # #speed
-        # self.speed = 0.1 #m/s
-        # self.turn = 0.4 #rad/s
-
-        # #default
-        # self.cmd = Twist()
-        # self.cmd.linear.x = self.speed
-        # self.cmd.angular.z = 0.0
         self.time_per_turn = 0.1
         self.timer = self.create_timer(self.time_per_turn, self.run_loop)
         # subscriber to get bump message
@@ -32,30 +26,42 @@ class BumpDetectNode(Node):
             Twist, "/cmd_vel", 10
         )  # /cmd_vel is velocity
 
+        self.backup_time = Duration(
+            seconds=5.0
+        )  # length of backup (approximately half meter)
         self.bumped = False
         self.current_pose = None
+        self.backing_up = False
+        self.start_time = None
+        self.backup_start_time = None
 
     def run_loop(self):
         # message received from Bump
         # twist for linear and angular velocity
-        cmd = Twist()
 
-        if not self.bumped:
-            cmd.linear.x = 0.1  # m/s
-            cmd.angular.z = 0.0
-            self.vel_pub.publish(cmd)
+        # if self.start_time:
+        #     self.start_time = self.get_clock().now()
+        msg = Twist()
 
-        else:
-            # stop the neato
-            cmd.linear.x = 0.0
-            cmd.angular.z = 0.0
-            self.vel_pub.publish(cmd)
-            # want 5 sec of -0.1 m/s for it to back up 0.5m to then
+        # redirect after bump
+        if self.bumped and not self.backing_up:
+            self.backing_up = True
+            self.backup_start_time = self.get_clock().now()
 
-            # #Move backwards 0.5m (5 seconds)
-            # rclpy.spin_once(self, timeout_sec=0.05) #times out
+        if self.backing_up:
+            if (self.get_clock().now() - self.backup_start_time) < self.backup_time:
+                msg.linear.x = -0.1  # m/s
+                msg.angular.z = 0.0
+            else:  # back to forward
+                self.backing_up = False
+                self.bumped = False
+                msg.linear.x = 0.1
+                msg.angular.z = 0.0
+        else:  # drive forward
+            msg.linear.x = 0.1  # m/s
+            msg.angular.z = 0.0
 
-            # set self.bumped = False
+        self.vel_pub.publish(msg)
 
     def bump_callback(self, msg: Bump):
         # if eys then change self.bumped to True
