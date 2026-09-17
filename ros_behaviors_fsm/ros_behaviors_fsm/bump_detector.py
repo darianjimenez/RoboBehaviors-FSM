@@ -1,3 +1,11 @@
+"""
+Bump Detector
+    This node encorporates a simple bump node where if the neato is
+    bumped, the signal is activated and then the neato will drive
+    backwards for 5 seconds, before driving forwards again.
+    The coordinator file allows the robot to turn 90* before continuing.
+"""
+
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -8,6 +16,8 @@ from rclpy.duration import Duration
 
 
 class BumpDetectNode(Node):
+    """A class that implements a node to to stop a robot and redirect when bumped."""
+
     def __init__(self):
         super().__init__("bump_detect_node")
         self.time_per_turn = 0.1
@@ -30,6 +40,17 @@ class BumpDetectNode(Node):
         self.backup_start_time = None
 
     def run_loop(self):
+
+        # DOUBLE CHECK THE ARGS ESPECIALLY TIME
+        """Handles the execution of the neato driving forward, or stopping.
+
+        Args:
+
+            Linear (_type_) = the linear velocity in m/s
+            angular (_type_) = the angular velocity in rad/s
+            time (_type_) = the time it is backing up
+
+        """
         msg = Twist()
 
         # redirect after bump
@@ -54,8 +75,12 @@ class BumpDetectNode(Node):
         self.vel_pub.publish(msg)
 
     def bump_callback(self, msg: Bump):
-        # if eys then change self.bumped to True
+        """Handles bump input data.
 
+        Args:
+            msg (Bump): message that takes value true if robot bumped.
+        """
+        # if bumped then change self.bumped to True
         if (
             msg.left_front == 1
             or msg.left_side == 1
@@ -68,7 +93,6 @@ class BumpDetectNode(Node):
             self.bumped = False
 
 
-# REVISIT BELOW _ IDK HOW TO WRITE MAIN Functions
 def main(args=None):
     rclpy.init(args=args)
     node = BumpDetectNode()
