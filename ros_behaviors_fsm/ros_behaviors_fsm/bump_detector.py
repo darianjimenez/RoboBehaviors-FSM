@@ -2,11 +2,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Header
-from nav_msgs.msg import Odometry
 from neato2_interfaces.msg import Bump
-from math import pi
-from threading import Thread, Event
 from time import sleep
 from rclpy.duration import Duration
 
@@ -18,8 +14,6 @@ class BumpDetectNode(Node):
         self.timer = self.create_timer(self.time_per_turn, self.run_loop)
         # subscriber to get bump message
         self.bump_sub = self.create_subscription(Bump, "/bump", self.bump_callback, 10)
-        # subscriber to odom message
-        # self.odom_sub = self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
 
         # publisher to wheel velocity
         self.vel_pub = self.create_publisher(
@@ -36,11 +30,6 @@ class BumpDetectNode(Node):
         self.backup_start_time = None
 
     def run_loop(self):
-        # message received from Bump
-        # twist for linear and angular velocity
-
-        # if self.start_time:
-        #     self.start_time = self.get_clock().now()
         msg = Twist()
 
         # redirect after bump
@@ -49,9 +38,10 @@ class BumpDetectNode(Node):
             self.backup_start_time = self.get_clock().now()
 
         if self.backing_up:
+            # time dependent backup
             if (self.get_clock().now() - self.backup_start_time) < self.backup_time:
-                msg.linear.x = -0.1  # m/s
-                msg.angular.z = 0.0
+                msg.linear.x = -0.1  # m/s backup
+                msg.angular.z = 0.0  # no turn, implemented in coordinator
             else:  # back to forward
                 self.backing_up = False
                 self.bumped = False
@@ -73,12 +63,9 @@ class BumpDetectNode(Node):
             or msg.right_front == 1
         ):
             self.bumped = True
+            print("bumped!")
         else:
             self.bumped = False
-
-    # def odom_callback(self, msg):
-    #     #want the position
-    #     self.current_pose = msg.pose.pose
 
 
 # REVISIT BELOW _ IDK HOW TO WRITE MAIN Functions
