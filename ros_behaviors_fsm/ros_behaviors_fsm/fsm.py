@@ -48,3 +48,10 @@ class FSMNode(Node):
             self.state = STATE.DRIVE_ARCH
 
         self.fsm_state_pub.publish(self.state)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = FSMNode()
+    rclpy.spin(node)
+    rclpy.shutdown()
