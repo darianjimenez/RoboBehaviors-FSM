@@ -21,13 +21,16 @@ class BumpDetectNode(Node):
 
     def __init__(self):
         super().__init__("bump_detect_node")
+        self.state = Int8()
         self.time_per_turn = 0.1
         self.timer = self.create_timer(self.time_per_turn, self.run_loop)
         # subscriber to get bump message
         self.bump_sub = self.create_subscription(Bump, "/bump", self.bump_callback, 10)
 
         # subscriber to fsm state
-        self.state_sub = self.create_subscription(Int8, "/fsm_state", self.run_loop, 10)
+        self.state_sub = self.create_subscription(
+            Int8, "/fsm_state", self.state_tracker, 10
+        )
 
         # publisher to bumped reversing flag as feedback for fsm state
         self.bump_pub = self.create_publisher(Bool, "/bumped_reversing", 10)
@@ -40,13 +43,16 @@ class BumpDetectNode(Node):
         self.backup_time = Duration(
             seconds=5.0
         )  # length of backup (approximately half meter)
-        self.bumped = False
+        self.bumped = Bool()
         self.current_pose = None
         self.backing_up = False
         self.start_time = None
         self.backup_start_time = None
 
-    def run_loop(self, state: Int8):
+    def state_tracker(self, state: Int8):
+        self.state = state
+
+    def run_loop(self):
         """Handles the execution of the neato driving forward, or stopping.
 
         Args:
@@ -58,7 +64,7 @@ class BumpDetectNode(Node):
         """
 
         # if fsm is in bump detector state
-        if state == 2:
+        if self.state.data == 2:
             msg = Twist()
 
             # redirect after bump
@@ -100,7 +106,7 @@ class BumpDetectNode(Node):
                 or msg.right_front == 1
             ):
                 # will publish true if the bump detector hits
-                self.bumped = True
+                self.bumped.data = True
                 self.bump_pub.publish(self.bumped)
                 print("bumped!")
             else:
