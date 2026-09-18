@@ -2,7 +2,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Int8, Bool
+from std_msgs.msg import Int8, Int32, Bool
 from math import pi
 from enum import Enum
 
@@ -15,14 +15,12 @@ class STATE(Enum):
 
 class FSMNode(Node):
     def __init__(self):
-        super.__init__("fsm")
-        self.state = STATE.DRIVE_ARCH
+        super().__init__("fsm")
+        self.state = Int8()
         self.time_per_turn = 0.1
-        self.found_following_state = False
-        self.bumped_reversing_state = False
-        self.create_timer(
-            self.time_per_turn,
-        )
+        self.found_following_state = Bool()
+        self.bumped_reversing_state = Bool()
+        self.create_timer(self.time_per_turn, self.run_loop)
         self.fsm_state_pub = self.create_publisher(Int8, "/fsm_state", 10)
         self.create_subscription(Bool, "/found_following_state", self.follower_sub, 10)
         self.create_subscription(Bool, "/bumped_reversing", self.bumped_sub, 10)
@@ -38,16 +36,17 @@ class FSMNode(Node):
     def run_loop(self):
 
         # state selector logic
-        if self.bumped_reversing_state & self.found_following_state:
-            self.state = STATE.BUMP_DETECTED
+        if self.bumped_reversing_state.data and self.found_following_state.data:
+            self.state.data = 2
         elif self.found_following_state:
-            self.state = STATE.FOLLOW_PERSON
+            self.state.data = 3
         elif self.bumped_reversing_state:
-            self.state = STATE.BUMP_DETECTED
+            self.state.data = 2
         else:
-            self.state = STATE.DRIVE_ARCH
+            self.state.data = 1
 
         self.fsm_state_pub.publish(self.state)
+        print(f"The current state is: {self.state.data}")
 
 
 def main(args=None):
@@ -55,3 +54,7 @@ def main(args=None):
     node = FSMNode()
     rclpy.spin(node)
     rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
