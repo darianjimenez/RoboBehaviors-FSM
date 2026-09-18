@@ -9,6 +9,7 @@ class PeopleFollowNode(Node):
     def __init__(self):
         super().__init__("people_follow_node")
 
+        self.found_following_target = Bool()
         self.state = 0
         self.scan_sub = self.create_subscription(
             LaserScan, "/scan", self.scan_callback, 10
@@ -19,8 +20,8 @@ class PeopleFollowNode(Node):
         self.vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
         self.follower = self.create_publisher(Bool, "/found_following_target_", 10)
 
-    def state_tracker(self, state):
-        self.state = state
+    def state_tracker(self, state: Int8):
+        self.state = state.data
 
     # current issue --> need to subscribe to multiple states in one node
     def scan_callback(self, scan):
@@ -35,8 +36,9 @@ class PeopleFollowNode(Node):
 
         # checks if
         if any(front, left, right != 0):
-            found_following_target = True
-            self.follower.publish(found_following_target)
+            self.found_following_target.data = True
+        else:
+            self.found_following_target.data = False
 
         if self.state == 3:
             # Turn toward the closest side
@@ -52,6 +54,7 @@ class PeopleFollowNode(Node):
             else:
                 msg.linear.x = 0.0
 
+        self.follower.publish(self.found_following_target)
         self.vel_pub.publish(msg)
 
 
