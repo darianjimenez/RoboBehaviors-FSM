@@ -17,6 +17,7 @@ class FSMNode(Node):
     def __init__(self):
         super().__init__("fsm")
         self.state = Int8()
+        self.state.data = 1
         self.time_per_turn = 0.1
         self.found_following_state = Bool()
         self.bumped_reversing_state = Bool()
@@ -36,14 +37,21 @@ class FSMNode(Node):
     def run_loop(self):
 
         # state selector logic
-        if self.bumped_reversing_state.data and self.found_following_state.data:
+        if (
+            self.bumped_reversing_state.data == True
+            and self.found_following_state.data == True
+        ):
+            print("Choice 1")
             self.state.data = 2
-        elif self.found_following_state:
+        elif self.found_following_state.data == True:
             self.state.data = 3
-        elif self.bumped_reversing_state:
+            print("Choice 2")
+        elif self.bumped_reversing_state.data == True:
             self.state.data = 2
+            print("Choice 3")
         else:
             self.state.data = 1
+            print("Choice 4")
 
         self.fsm_state_pub.publish(self.state)
         print(f"The current state is: {self.state.data}")
