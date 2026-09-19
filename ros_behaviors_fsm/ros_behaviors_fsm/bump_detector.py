@@ -63,28 +63,33 @@ class BumpDetectNode(Node):
 
         """
 
+        print(f"Currently bumped: {self.bumped}")
         # if fsm is in bump detector state
         if self.state.data == 2:
             msg = Twist()
 
             # redirect after bump
-            if self.bumped and not self.backing_up:
+            if self.bumped.data and not self.backing_up:
                 self.backing_up = True
                 self.backup_start_time = self.get_clock().now()
 
             if self.backing_up:
                 # time dependent backup
                 if (self.get_clock().now() - self.backup_start_time) < self.backup_time:
-                    msg.linear.x = -0.1  # m/s backup
+                    msg.linear.x = -0.2  # m/s backup
                     msg.angular.z = 0.0  # no turn, implemented in coordinator
+                    # print("I'm backing up now")
                 else:  # back to forward
                     self.backing_up = False
-                    self.bumped = False
+                    self.bumped.data = False
                     msg.linear.x = 0.1
                     msg.angular.z = 0.0
+                    # print("I'm moving forward now")
             else:  # drive forward
+                self.bumped.data = False
+                # print("Leave bumped state")
                 self.bump_pub.publish(
-                    False
+                    self.bumped
                 )  # will toggle bump state off once bump behavior is done
 
             self.vel_pub.publish(msg)
@@ -96,21 +101,19 @@ class BumpDetectNode(Node):
             msg (Bump): message that takes value true if robot bumped.
         """
         # if bumped then change self.bumped to True
+
         if (
-            self.backing_up == False
-        ):  ## ensures that fsm doesn't change while backing up
-            if (
-                msg.left_front == 1
-                or msg.left_side == 1
-                or msg.right_side == 1
-                or msg.right_front == 1
-            ):
-                # will publish true if the bump detector hits
-                self.bumped.data = True
-                self.bump_pub.publish(self.bumped)
-                print("bumped!")
-            else:
-                self.bumped = False
+            msg.left_front == 1
+            or msg.left_side == 1
+            or msg.right_side == 1
+            or msg.right_front == 1
+        ):
+            # will publish true if the bump detector hits
+            self.bumped.data = True
+            self.bump_pub.publish(self.bumped)
+            print("bumped!")
+        else:
+            self.bumped.data = False
 
 
 def main(args=None):
