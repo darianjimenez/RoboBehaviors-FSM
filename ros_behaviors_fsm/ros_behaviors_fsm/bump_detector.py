@@ -20,20 +20,26 @@ class BumpDetectNode(Node):
     """A class that implements a node to to stop a robot and redirect when bumped."""
 
     def __init__(self):
+        """Set up subscribers, publishers, timers, and variables"""
         super().__init__("bump_detect_node")
-        self.state = Int8()
-        self.time_per_turn = 0.1
+        self.state = Int8() # Store current state
+        self.time_per_turn = 0.1 # Run every .1 seconds
         self.timer = self.create_timer(self.time_per_turn, self.run_loop)
-        # subscriber to get bump message
-        self.bump_sub = self.create_subscription(Bump, "/bump", self.bump_callback, 10)
 
-        # subscriber to fsm state
+        # Subscriber to get bump message
+        self.bump_sub = self.create_subscription(
+            Bump, "/bump", self.bump_callback, 10
+        )
+
+        # Subscriber to fsm state
         self.state_sub = self.create_subscription(
             Int8, "/fsm_state", self.state_tracker, 10
         )
 
         # publisher to bumped reversing flag as feedback for fsm state
-        self.bump_pub = self.create_publisher(Bool, "/bumped_reversing", 10)
+        self.bump_pub = self.create_publisher(
+            Bool, "/bumped_reversing", 10
+        )
 
         # publisher to wheel velocity
         self.vel_pub = self.create_publisher(
@@ -43,24 +49,25 @@ class BumpDetectNode(Node):
         self.backup_time = Duration(
             seconds=5.0
         )  # length of backup (approximately half meter)
+
         self.bumped = Bool()
         self.current_pose = None
         self.backing_up = False
         self.start_time = None
-        self.backup_start_time = None
+        self.backup_start_time = None # store when backup started
 
     def state_tracker(self, state: Int8):
+        """Save current FSM state"""
         self.state = state
 
     def run_loop(self):
-        """Handles the execution of the neato driving forward, or stopping.
+        """
+        Handles the execution of the neato driving forward, or stopping.
 
         Args:
-
             Linear (_type_) = the linear velocity in m/s
             angular (_type_) = the angular velocity in rad/s
             time (_type_) = the time it is backing up
-
         """
 
         print(f"Currently bumped: {self.bumped}")
@@ -95,13 +102,13 @@ class BumpDetectNode(Node):
             self.vel_pub.publish(msg)
 
     def bump_callback(self, msg: Bump):
-        """Handles bump input data.
+        """
+        Handles bump input data.
 
         Args:
             msg (Bump): message that takes value true if robot bumped.
         """
         # if bumped then change self.bumped to True
-
         if (
             msg.left_front == 1
             or msg.left_side == 1
@@ -117,6 +124,7 @@ class BumpDetectNode(Node):
 
 
 def main(args=None):
+    """Start bump detector node"""
     rclpy.init(args=args)
     node = BumpDetectNode()
     try:
