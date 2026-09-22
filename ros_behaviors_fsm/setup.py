@@ -26,7 +26,7 @@ setup(
             "drive_arch = ros_behaviors_fsm.drive_arch:main",
             "bump_detector = ros_behaviors_fsm.bump_detector:main",
             "people_follow = ros_behaviors_fsm.follower:main",
-            "fsm = ros_behaviors_fsm.fsm:main",
+            "fsm = ros_behaviors_fsm.finite_state_controller:main",
         ],
     },
 )
