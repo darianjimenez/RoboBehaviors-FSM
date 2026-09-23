@@ -38,6 +38,8 @@ To prevent the robot getting confused if the object is lost/deleted, we only set
 
 Once a target is found, the index gets converted to a left/right direction and when the FSM puts the robot in state 3, the follower uses that direction to set the angular velocity, publishing the movement command to /cmd_vel. In the FSM, the follower also published the /found_following_state as a boolean, so when it’s set to false, it will switch from state 3 into another state. 
 
+![People Follower](follower.png)
+
 ## Finite State Machine
 ### Combining the Behaviors - Finite State Controllers
 
