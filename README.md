@@ -12,7 +12,7 @@ The intent for this behavior is for the Neato to drive in a circle. When the FSM
 
 Diagram:
 
-![Drive Arch](drive_arch.drawio(1).png)
+![Drive Arch](drive_arch.drawio(1)_bg.png)
 
 #### Behavior 2: Bump Detector (bump_detectory.py)
 _Method and Relevant Code Structure:_
@@ -20,13 +20,13 @@ This behavior is intended to e-stop and redirect the robot during a collision. T
 
 Diagram: 
 
-![Bump Detector](bump_detector.drawio.png)
+![Bump Detector](bump_detector.drawio_bg.png)
 
 Within the context of the Finite State Machine, the Bump Detector also publishes a bumped_reversing as a Bool message type. While the Neato collides, e-stops, and reverses, the Bump Detector will publish this state as True – which the Finite State Machine will use to switch the FSM states between nodes. Once the Neato fully reverses, the Bump Detector will publish the bumped_reversing as false. In addition, this integration also removes the post-Bump behavior where the Neato will drive forward. We will discuss the FSM integration in further detail in a later section:
 
 Diagram: 
 
-![Bump Detector](bump_detector.drawio(1).png)
+![Bump Detector](bump_detector.drawio(1)_bg.png)
 
 #### Behavior 3: People Follower (people_follower.py)
 
@@ -52,7 +52,7 @@ If only /bumped_reversing is set to True by the bump_detector node, the FSM will
 
 Diagram:
 
-![FSM Diagram](fsm_diagram.drawio(1).png)
+![FSM Diagram](fsm_diagram.drawio(1)_bg.png)
 
 ## Conclusion
 ### Limitations
