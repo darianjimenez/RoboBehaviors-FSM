@@ -11,15 +11,20 @@ _Method and Relevant Code Structure:_
 The intent for this behavior is for the Neato to drive in a circle. When the FSM sets the state to the arch behavior, the Neato will drive at a constant linear and angular velocity. This node publishes to the cmd_vel topic at a 10 Hz rate – with a linear velocity of 0.5 m/s and pi/3 rad/s. 
 
 Diagram:
+
 ![Drive Arch](drive_arch.drawio(1).png)
 
 #### Behavior 2: Bump Detector (bump_detectory.py)
 _Method and Relevant Code Structure:_
 This behavior is intended to e-stop and redirect the robot during a collision. To enable this behavior, our bump_detect_node subscribes to the Bump topic. When the Neato bumper collides into an object, the e-stop behavior is activated whereby for 5 seconds, the Neato stops, backs up, and starts driving forward. Throughout this e-stop behavior, the node will publish the appropriate velocities to the cmd_vel topic. 
 
+Diagram: 
+
 ![Bump Detector](bump_detector.drawio.png)
 
 Within the context of the Finite State Machine, the Bump Detector also publishes a bumped_reversing as a Bool message type. While the Neato collides, e-stops, and reverses, the Bump Detector will publish this state as True – which the Finite State Machine will use to switch the FSM states between nodes. Once the Neato fully reverses, the Bump Detector will publish the bumped_reversing as false. In addition, this integration also removes the post-Bump behavior where the Neato will drive forward. We will discuss the FSM integration in further detail in a later section:
+
+Diagram: 
 
 ![Bump Detector](bump_detector.drawio(1).png)
 
@@ -46,6 +51,7 @@ The finite state controller node also subscribes to two topics /bumped_reversing
 If only /bumped_reversing is set to True by the bump_detector node, the FSM will publish /state as 2 – which will set the bumped_detector node as the active node. If only /found_following_target is set to True by the people_follow node, the FSM will publish /state as 3, setting the people_follow node as the active node. In the case that both /bumped_reversing and /found_following_target are true, the bump_detector node will take precedence and be set to active. We made this design choice because placing high priority for the people_follow node could nullify the bump_detector’s e-stop behavior. Finally, when /bumped_reversing and /found_following_target are false, the FSM will set the drive_arch node to active until it finds a target or bumps into an object. 
 
 Diagram:
+
 ![FSM Diagram](fsm_diagram.drawio(1).png)
 
 ## Conclusion
